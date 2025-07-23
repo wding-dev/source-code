@@ -4,7 +4,7 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Insert a new FTP rate for each product type and rate type based on avg loan interest rate (dummy logic)
-    INSERT INTO ft_ftp_rates (product_type, rate_type_id, ftp_rate, effective_date)
+    INSERT INTO ft_ftp_rates (product_type, rate_type_id, rate_type, ftp_rate, effective_date)
     SELECT
         p.product_type,
         -- Assign different rate types based on product characteristics
@@ -15,6 +15,14 @@ BEGIN
             WHEN p.product_type LIKE '%Term%' THEN 4 -- Term
             ELSE 5 -- Base
         END AS rate_type_id,
+        -- Add corresponding rate_type name
+        CASE 
+            WHEN p.product_type LIKE '%Fixed%' THEN 'Fixed'
+            WHEN p.product_type LIKE '%Variable%' THEN 'Variable'
+            WHEN p.product_type LIKE '%Overnight%' THEN 'Overnight'
+            WHEN p.product_type LIKE '%Term%' THEN 'Term'
+            ELSE 'Base'
+        END AS rate_type,
         ROUND(AVG(l.interest_rate) * 0.9, 2) AS ftp_rate,
         CAST(GETDATE() AS DATE)
     FROM fact_loan l
